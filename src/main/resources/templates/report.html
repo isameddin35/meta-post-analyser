@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meta Post Performance Report</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            max-width: 1000px; margin: 0 auto; padding: 24px;
+            background: #f5f6f8; color: #1c1e21;
+        }
+        h1 { font-size: 1.6rem; margin-bottom: 20px; color: #1877f2; }
+        h2 { font-size: 1.2rem; margin: 20px 0 10px; }
+
+        .summary-card {
+            background: linear-gradient(135deg, #1877f2, #0a4e9e);
+            color: #fff; padding: 20px; border-radius: 10px; margin-bottom: 24px;
+        }
+        .summary-card p { font-size: 1rem; line-height: 1.5; }
+
+        .top3-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 12px; margin-bottom: 24px;
+        }
+        .top-card {
+            background: #fff; border: 1px solid #e4e6eb; border-radius: 10px;
+            padding: 16px; position: relative;
+        }
+        .top-card .rank {
+            position: absolute; top: -8px; left: -8px;
+            background: #1877f2; color: #fff; width: 28px; height: 28px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 0.85rem;
+        }
+        .top-card .media-thumb {
+            width: 100%; height: 140px; object-fit: cover; border-radius: 6px;
+            margin-bottom: 10px; background: #e4e6eb;
+        }
+        .top-card .message {
+            font-size: 0.9rem; margin-bottom: 10px;
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .top-card .stats { font-size: 0.85rem; color: #65676b; }
+        .top-card .stats span { margin-right: 12px; }
+        .top-card .stats .num { font-weight: 600; color: #1c1e21; }
+
+        .best-day {
+            background: #fff; border: 1px solid #e4e6eb; border-radius: 10px;
+            padding: 16px; margin-bottom: 24px; display: flex; align-items: center; gap: 12px;
+        }
+        .best-day .day-name {
+            font-size: 1.4rem; font-weight: 700; color: #1877f2;
+        }
+        .best-day .day-detail { font-size: 0.9rem; color: #65676b; }
+
+        table {
+            width: 100%; border-collapse: collapse; background: #fff;
+            border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.08);
+        }
+        th {
+            background: #f0f2f5; text-align: left; padding: 10px 12px;
+            font-size: 0.8rem; text-transform: uppercase; letter-spacing: .03em; color: #65676b;
+        }
+        td { padding: 10px 12px; border-top: 1px solid #e4e6eb; font-size: 0.9rem; }
+        tr.top-row { background: #eaf3ff; }
+        .msg-cell { max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .thumb-cell { width: 50px; padding: 4px 8px !important; }
+        .thumb-cell img { width: 44px; height: 44px; object-fit: cover; border-radius: 4px; background: #e4e6eb; display: block; }
+
+        .error { background: #fff5f5; border: 1px solid #fcc; padding: 16px; border-radius: 10px; color: #c00; }
+        .empty { color: #65676b; text-align: center; padding: 40px; }
+
+        footer { margin-top: 30px; font-size: 0.8rem; color: #65676b; text-align: center; }
+    </style>
+</head>
+<body>
+
+<h1>Meta Post Performance Report</h1>
+
+<div th:if="${#lists.size(posts) == 0}" class="empty">
+    No posts found. Check your ACCESS_TOKEN and PAGE_ID.
+</div>
+
+<div th:unless="${#lists.size(posts) == 0}">
+
+    <div class="summary-card">
+        <h2>Analytics Summary</h2>
+        <p th:text="${analysis.summary}">Summary</p>
+    </div>
+
+    <h2>Top 3 Posts by Engagement</h2>
+    <div class="top3-grid">
+        <div th:each="post, stat : ${analysis.top3}" class="top-card">
+            <div class="rank" th:text="${stat.count}">1</div>
+            <img th:if="${post.hasMedia}" th:src="${post.mediaUrl}" alt="Media" class="media-thumb"/>
+            <div class="message" th:text="${post.message}">Post text</div>
+            <div class="stats">
+                <span>Likes <span class="num" th:text="${post.likes}">0</span></span>
+                <span>Comments <span class="num" th:text="${post.comments}">0</span></span>
+                <span>Engagement <span class="num" th:text="${post.engagement}">0</span></span>
+            </div>
+        </div>
+    </div>
+
+    <h2>Best Posting Day</h2>
+    <div class="best-day">
+        <div class="day-name" th:text="${analysis.bestDay}">MONDAY</div>
+        <div class="day-detail">
+            Average likes per post: <strong th:text="${#numbers.formatDecimal(analysis.bestDayAvgLikes, 1, 1)}">0.0</strong>
+        </div>
+    </div>
+
+    <h2>All Posts (Last 20)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Media</th>
+                <th>Message</th>
+                <th>Date</th>
+                <th>Likes</th>
+                <th>Comments</th>
+                <th>Engagement</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="post, stat : ${posts}" th:class="${stat.index < 3} ? 'top-row' : ''">
+                <td th:text="${stat.count}">1</td>
+                <td class="thumb-cell">
+                    <img th:if="${post.hasMedia}" th:src="${post.mediaUrl}" alt=""/>
+                    <span th:unless="${post.hasMedia}" style="color:#ccc;font-size:0.7rem">—</span>
+                </td>
+                <td class="msg-cell" th:text="${post.message}">message</td>
+                <td th:text="${post.createdTime} ? ${#temporals.format(post.createdTime, 'dd MMM yyyy')} : 'N/A'">date</td>
+                <td th:text="${post.likes}">0</td>
+                <td th:text="${post.comments}">0</td>
+                <td th:text="${post.engagement}">0</td>
+            </tr>
+        </tbody>
+    </table>
+
+</div>
+
+<footer>
+    Generated via Meta Graph API &middot; Meta Post Analyser
+</footer>
+
+</body>
+</html>
