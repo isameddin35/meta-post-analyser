@@ -16,8 +16,8 @@ import java.util.stream.Collectors;
 @Service
 public class MetaGraphService {
 
-    private static final String GRAPH_API_URL =
-            "https://graph.facebook.com/v19.0/%s/posts?fields=message,story,full_picture,attachments,created_time,likes.summary(true),comments.summary(true)&limit=20&access_token=%s";
+    private static final String POSTS_URL =
+            "https://graph.facebook.com/v19.0/%s/posts?fields=id,message,story,full_picture,attachments,status_type,created_time,likes.limit(0).summary(true),comments.limit(0).summary(true)&limit=20&access_token=%s";
 
     private static final DateTimeFormatter FB_DATE_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ");
@@ -29,7 +29,7 @@ public class MetaGraphService {
     }
 
     public List<Post> fetchPosts(String pageId, String accessToken) {
-        String url = String.format(GRAPH_API_URL, pageId, accessToken);
+        String url = String.format(POSTS_URL, pageId, accessToken);
         GraphResponse response = restTemplate.getForObject(url, GraphResponse.class);
 
         if (response == null || response.data == null) {
@@ -68,6 +68,17 @@ public class MetaGraphService {
                     default -> "📎 " + type.substring(0, 1).toUpperCase() + type.substring(1);
                 };
             }
+        }
+        if (gp.statusType != null && !gp.statusType.isBlank()) {
+            return switch (gp.statusType) {
+                case "added_video" -> "🎬 Video";
+                case "added_photos" -> "📷 Photo";
+                case "mobile_status_update" -> "📝 Post";
+                case "shared_story" -> "🔄 Shared Post";
+                case "wall_post" -> "📝 Post";
+                case "created_note" -> "📝 Note";
+                default -> "📎 " + gp.statusType.replace("_", " ").toUpperCase();
+            };
         }
         return "(no text)";
     }
@@ -109,6 +120,8 @@ public class MetaGraphService {
         @JsonProperty("full_picture")
         public String fullPicture;
         public Attachments attachments;
+        @JsonProperty("status_type")
+        public String statusType;
         @JsonProperty("created_time")
         public String createdTime;
         public LikeComments likes;
