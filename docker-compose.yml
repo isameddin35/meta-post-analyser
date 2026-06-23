@@ -1,0 +1,10 @@
+services:
+  analyser:
+    build: .
+    container_name: meta-post-analyser
+    ports:
+      - "8080:8080"
+    environment:
+      - ACCESS_TOKEN=${ACCESS_TOKEN}
+      - PAGE_ID=${PAGE_ID}
+    restart: unless-stopped
