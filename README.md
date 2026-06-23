@@ -24,7 +24,7 @@ Built with **Java 21 + Spring Boot 3 + Thymeleaf**.
 ### 1. Clone and configure
 
 ```bash
-git clone https://github.com/<your-username>/meta-post-analyser.git
+git clone https://github.com/isameddin35/meta-post-analyser.git
 cd meta-post-analyser
 ```
 
